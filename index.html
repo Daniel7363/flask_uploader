@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ Uploader</title>
+</head>
+<body>
+    <h1>Upload MCQ Files</h1>
+    <form action="/process" method="post">
+        <label for="question_file">Questions File:</label>
+        <input type="text" name="question_file" id="question_file" required><br><br>
+
+        <label for="answer_file">Answers File:</label>
+        <input type="text" name="answer_file" id="answer_file" required><br><br>
+
+        <label for="subject">Subject:</label>
+        <input type="text" name="subject" id="subject" required><br><br>
+
+        <label for="year">Year:</label>
+        <input type="text" name="year" id="year" required><br><br>
+
+        <button type="submit">Process Files</button>
+    </form>
+</body>
+</html>

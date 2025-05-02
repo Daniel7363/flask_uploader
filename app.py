@@ -1,12 +1,15 @@
 from flask import Flask, request, jsonify
 from helpers import get_file, extract_shapes_with_details, parse_questions_from_latex, parse_answers, upload_mcqs_batch
 from supabase import create_client
-
+import os
+from dotenv import load_dotenv
 app = Flask(__name__)
 
-# Setup Supabase
-SUPABASE_URL = "your-supabase-url"
-SUPABASE_KEY = "your-supabase-key"
+# Load .env variables
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route('/api/process', methods=['POST'])

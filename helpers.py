@@ -292,7 +292,7 @@ def upload_mcqs_batch(questions, answers, subject, year, supabase, shapes_data):
         if question_num is None:
             print(f"⚠️ Skipping question with no number: {q['question'][:30]}...")
             continue
-
+        print("hereeeee")
         # Attach answer + explanation from answer map
         if question_num in answers:
             q.update({

@@ -311,9 +311,9 @@ def upload_mcqs_batch(questions, answers, subject, year, supabase, shapes_data):
         records.append({
             "id": str(uuid.uuid4()),  # ✅ Random unique ID
             "question_number": question_num,  # ✅ New field
-            "question": q["question"],
-            "choices": json.dumps(q["choices"]),
-            "answer": q["answer"],
+            "question_text": q["question"],
+            "options": json.dumps(q["choices"]),
+            "correct_answer": q["answer"],
             "explanation": q["explanation"],
             "subject": subject,
             "year": year  # Add year to the record

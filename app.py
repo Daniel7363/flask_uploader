@@ -49,7 +49,6 @@ def process_files():
             answers = parse_answers(answers_tex, all_shapes)
 
             questions, answers = map_shapes_to_content(questions, answers, all_shapes)
-            print(questions,answers)
             upload_mcqs_batch(questions, answers, subject, year, supabase, all_shapes)
 
         return jsonify({"message": "Files processed successfully"})

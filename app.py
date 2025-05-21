@@ -29,7 +29,7 @@ def verify_admin_token():
     token = auth_header.replace("Bearer ", "").strip()
     try:
         decoded = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        if decoded.get("role") != "admin":
+        if decoded.get("role") != "the big boss, the man, the myth, the legend":
             return jsonify({"error": "Forbidden"}), 403
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Token expired"}), 401

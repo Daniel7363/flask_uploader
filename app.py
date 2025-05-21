@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from helpers import  extract_shapes_with_details, parse_questions_from_latex, parse_answers, upload_mcqs_batch , map_shapes_to_content
 from supabase import create_client
 import os
 from dotenv import load_dotenv
 app = Flask(__name__)
+CORS(app, origins=["http://localhost:8080", "https://your-production-site.com"])
 
 # Load .env variables
 SUPABASE_URL = os.getenv("SUPABASE_URL")

@@ -3,3 +3,4 @@ supabase
 python-dotenv
 python-docx
 lxml
+flask-cors

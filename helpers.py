@@ -284,7 +284,7 @@ def convert_docx_to_latex(docx_filename, output_tex_filename):
 # Batch insert MCQs to Supabase
 
 
-def upload_mcqs_batch(questions, answers, subject, year, supabase, shapes_data):
+def upload_mcqs_batch(questions, answers, subject, year, supabase, shapes_data ,testId):
     records = []
 
     for q in questions:
@@ -316,7 +316,8 @@ def upload_mcqs_batch(questions, answers, subject, year, supabase, shapes_data):
             "correct_answer": q["answer"],
             "explanation": q["explanation"],
             "subject": subject,
-            "year": year  # Add year to the record
+            "year": year,
+            "test_id": testId# Add year to the record
         })
 
     # Upload logic with retries

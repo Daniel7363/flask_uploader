@@ -54,7 +54,7 @@ def process_files():
 
     subject = data.get('subject', '')
     year = data.get('year', '')
-    testId = data.get('testId', '')
+    testId = data.get('test_id', '')
 
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as qf, \

@@ -54,6 +54,7 @@ def process_files():
 
     subject = data.get('subject', '')
     year = data.get('year', '')
+    testId = data.get('testId', '')
 
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as qf, \
@@ -74,7 +75,7 @@ def process_files():
             answers = parse_answers(answers_tex, all_shapes)
 
             questions, answers = map_shapes_to_content(questions, answers, all_shapes)
-            upload_mcqs_batch(questions, answers, subject, year, supabase, all_shapes)
+            upload_mcqs_batch(questions, answers, subject, year, supabase, all_shapes, testId)
 
         return jsonify({"message": "Files processed successfully"})
 

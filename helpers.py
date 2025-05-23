@@ -84,75 +84,109 @@ def clean_latex_table_formatting(text):
 
 
 def parse_questions_from_latex(text):
-    # Regex to capture everything inside the longtable environment
-    pattern = re.compile(
-        r'(.*?)\\begin\{longtable\}\[\]\{[^}]*\}\s*(.*?)\\end\{longtable\}',
-        re.DOTALL
-    )
+    longtable_pattern = r'\\begin\{longtable\}(\[[^\]]*\])?\{[^}]*\}.*?\\end\{longtable\}'
 
-    matches = pattern.findall(text)
+    question_blocks = re.split(r'(\\textbf\{\d+\.\})', text)
     questions = []
 
-    for question_raw, table_raw in matches:
-        # Extract question number (looking for patterns like 1., 2., 3., etc.)
-        question_number_match = re.search(r'(?:\\textbf\{)?(\d+)[.)]?', question_raw)
-        question_number = int(question_number_match.group(1)) if question_number_match else None
+    for i in range(1, len(question_blocks), 2):
+        prefix = question_blocks[i]
+        content = question_blocks[i + 1]
 
-        # Clean and format question text (remove extra spaces and newlines)
-        question_lines = [line.strip() for line in question_raw.strip().splitlines() if line.strip()]
-        question = " ".join(question_lines).strip()
+        number_match = re.search(r'\\textbf\{(\d+)\.\}', prefix)
+        question_number = int(number_match.group(1)) if number_match else None
+        if question_number is None:
+            continue
 
-        # Detect table type: Single-column (no '&' character) or Multi-column (contains '&')
-        is_single_column = not '&' in table_raw
+        # Find all longtables as Match objects to preserve order and positions
+        longtable_matches = list(re.finditer(longtable_pattern, content, re.DOTALL))
+        longtables = [m.group(0) for m in longtable_matches]
 
-        # Clean up the table raw content (remove unnecessary parts)
-        table_clean = table_raw.strip()
+        if not longtables:
+            continue
 
-        table_choices = []
+        answer_table_latex = longtables[-1]
+
+        # Replace each longtable in content by a placeholder, in order
+        question_body_parts = []
+        last_index = 0
+        for idx, match in enumerate(longtable_matches):
+            start, end = match.span()
+            # Text before this table
+            question_body_parts.append(content[last_index:start])
+            # Add placeholder with index to replace precisely later
+            question_body_parts.append(f'<<<LONGTABLE_{idx}>>>')
+            last_index = end
+        # Add remaining content after last table
+        question_body_parts.append(content[last_index:])
+        question_body = "".join(question_body_parts)
+
+        # Now replace placeholders for all tables except last (answer table)
+        question_body_with_tables = question_body
+        for idx, table_latex in enumerate(longtables[:-1]):
+            placeholder = f'<<<LONGTABLE_{idx}>>>'
+            question_body_with_tables = question_body_with_tables.replace(placeholder, table_latex)
+
+        # Remove any leftover placeholders (should only be the last one for answer table)
+        for idx in range(len(longtables)-1, len(longtables)):
+            placeholder = f'<<<LONGTABLE_{idx}>>>'
+            question_body_with_tables = question_body_with_tables.replace(placeholder, '')
+
+        question_text = question_body_with_tables.strip()
+
+        # Extract answer table content inside the last longtable (without environment)
+        answer_table_content = re.sub(
+            r'\\begin\{longtable\}(\[[^\]]*\])?\{[^}]*\}|\\end\{longtable\}',
+            '',
+            answer_table_latex,
+            flags=re.DOTALL
+        ).strip()
+
+        is_single_column = '&' not in answer_table_content
         seen_options = {}
 
-        # Parse each line of the table content
-        for line in table_clean.splitlines():
-            line = line.strip()
-            if not line or line.startswith('%'):
-                continue
-
-            if is_single_column:
-                # In a single-column table, each line corresponds to one option
-                match = re.match(r'([A-D])\.\s*(.*)', line)
+        if is_single_column:
+            current_option = None
+            current_text = []
+            for line in answer_table_content.splitlines():
+                line = line.strip()
+                if not line or line.startswith('%'):
+                    continue
+                match = re.match(r'([A-Z])\.\s*(.*)', line)
                 if match:
-                    option = match.group(1)
-                    choice = match.group(2).strip()
-                    if option not in seen_options:
-                        seen_options[option] = {
-                            "option": option,
-                            "choice": choice
+                    if current_option:
+                        seen_options[current_option] = {
+                            "option": current_option,
+                            "choice": " ".join(current_text).strip()
                         }
-            else:
-                # In multi-column tables, we split by '&' and check each cell
-                cells = [cell.strip() for cell in line.split('&') if cell.strip()]
-                for cell in cells:
-                    # Match options like A., B., C., D. in multi-column cells
-                    matches = re.findall(r'([A-D])\.\s*(.*?)(?=(?:[A-D]\.|$))', cell)
-                    for option, choice in matches:
-                        if option not in seen_options:
-                            seen_options[option] = {
-                                "option": option,
-                                "choice": choice.strip()
-                            }
+                    current_option = match.group(1)
+                    current_text = [match.group(2)]
+                else:
+                    if current_option:
+                        current_text.append(line)
+            if current_option:
+                seen_options[current_option] = {
+                    "option": current_option,
+                    "choice": " ".join(current_text).strip()
+                }
+        else:
+            flat_content = " ".join(line.strip() for line in answer_table_content.splitlines() if line.strip())
+            matches = re.findall(r'([A-Z])\.\s*((?:.*?)(?=(?:[A-Z]\.\s|$)))', flat_content)
+            for option, choice in matches:
+                seen_options[option] = {
+                    "option": option,
+                    "choice": choice.strip()
+                }
 
-        # Sort choices by their option letter (A, B, C, D)
         table_choices = sorted(seen_options.values(), key=lambda x: x['option'])
 
-        # Append the parsed question and its choices to the questions list
         questions.append({
             "number": question_number,
-            "question": question,
+            "question": question_text,
             "choices": table_choices
         })
 
     return questions
-
 
 # Map shapes to content
 def map_shapes_to_content(questions, answers, shapes_data):
